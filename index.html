@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旋转矩阵计算</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.3/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/nerdamer@1.1.12/all.min.js"></script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .row {
+
+            margin-right: 5px;
+            margin-left: 5px;
+        }
+        .result-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        /* 增大标签字体 */
+        .form-label {
+            font-size: 1.5rem; /* 调整为合适的字体大小 */
+            font-weight: bold;
+        }
+        /* 确保标签与输入框紧密排列 */
+        .form-group.row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .form-group.row label {
+            margin-bottom: 0;
+            margin-right: 10px; /* 可根据需要调整间距 */
+        }
+        .form-group.row .form-control {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">旋转矩阵计算</h1>
+        <p class="text-center">以过原点的单位向量$\textbf{r}$为轴旋转$\varphi$角的旋转矩阵</p>
+        <div class="result-container">
+            <form>
+                <!-- r_x 输入 -->
+                <div class="form-group row">
+                    <label for="rx" class="form-label">$r_x$ =</label>
+                    <input type="text" class="form-control" id="rx" value="sqrt(3)/3" placeholder="sqrt(3)/3">
+                </div>
+                
+                <!-- r_y 输入 -->
+                <div class="form-group row">
+                    <label for="ry" class="form-label">$r_y$ =</label>
+                    <input type="text" class="form-control" id="ry" value="sqrt(3)/3" placeholder="sqrt(3)/3">
+                </div>
+                
+                <!-- r_z 输入 -->
+                <div class="form-group row">
+                    <label for="rz" class="form-label">$r_z$ =</label>
+                    <input type="text" class="form-control" id="rz" value="-sqrt(3)/3" placeholder="-sqrt(3)/3">
+                </div>
+                
+                <!-- φ 输入 -->
+                <div class="form-group row">
+                    <label for="phi" class="form-label">$\varphi$ =</label>
+                    <input type="text" class="form-control" id="phi" value="(2*pi)/3" placeholder="(2*pi)/3">
+                </div>
+
+                <div class="text-center">
+                    <button type="button" class="btn btn-primary mt-3" onclick="calculateMatrix()">计算</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="text-center mt-5 result-container">
+            <h5>$R(\mathbf{r}, \varphi) =$</h5>
+            <div id="result" class="mt-3 "></div>
+        </div>
+    </div>
+
+    <script>
+        // 使用 nerdamer 进行符号计算
+        function symbolicRotationMatrixNoNormalization(rx, ry, rz, phi) {
+            let cos_phi = nerdamer('cos(phi)', {phi: phi});
+            let sin_phi = nerdamer('sin(phi)', {phi: phi});
+            let one_minus_cos = nerdamer('1 - cos(phi)', {phi: phi});
+
+            // 旋转矩阵
+            let R = [
+                [
+                    nerdamer(`(${rx})*(${rx}) * (${one_minus_cos}) + (${cos_phi})`).toTeX(),
+                    nerdamer(`(${rx}) * (${ry}) * (${one_minus_cos}) - (${rz}) * (${sin_phi})`).toTeX(),
+                    nerdamer(`(${rx}) * (${rz}) * (${one_minus_cos}) + (${ry}) * (${sin_phi})`).toTeX()
+                ],
+                [
+                    nerdamer(`(${ry}) * (${rx}) * (${one_minus_cos}) + (${rz}) * (${sin_phi})`).toTeX(),
+                    nerdamer(`(${ry})*(${ry}) * (${one_minus_cos}) + (${cos_phi})`).toTeX(),
+                    nerdamer(`(${ry}) * (${rz}) * (${one_minus_cos}) - (${rx}) * (${sin_phi})`).toTeX()
+                ],
+                [
+                    nerdamer(`(${rz}) * (${rx}) * (${one_minus_cos}) - (${ry}) * (${sin_phi})`).toTeX(),
+                    nerdamer(`(${rz}) * (${ry}) * (${one_minus_cos}) + (${rx}) * (${sin_phi})`).toTeX(),
+                    nerdamer(`(${rz})*(${rz}) * (${one_minus_cos}) + (${cos_phi})`).toTeX()
+                ]
+            ];
+
+            return R;
+        }
+
+        function calculateMatrix() {
+            try {
+                // 获取用户输入
+                let rx = document.getElementById('rx').value;
+                let ry = document.getElementById('ry').value;
+                let rz = document.getElementById('rz').value;
+                let phi = document.getElementById('phi').value;
+
+                // 计算旋转矩阵
+                let symbolicMatrix = symbolicRotationMatrixNoNormalization(rx, ry, rz, phi);
+
+                // 格式化输出结果
+                let output = symbolicMatrix.map(row => row.join(' & ')).join('\\\\ ');
+
+                // 设置 LaTeX 渲染内容，并包含矩阵环境
+                document.getElementById('result').innerHTML = `\\[ \\begin{bmatrix} ${output} \\end{bmatrix} \\]`;
+
+                // 重新渲染 MathJax
+                MathJax.typesetPromise();
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<span class="text-danger">输入有误，请检查您的表达式。</span>`;
+                MathJax.typesetPromise();
+                console.error(error);
+            }
+        }
+    </script>
+
+</body>
+</html>
